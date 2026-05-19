@@ -1,0 +1,762 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>English Level Check</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --ink: #0f0f0f;
+    --paper: #f5f2eb;
+    --accent: #c8432b;
+    --accent2: #2b6cb8;
+    --muted: #8a8070;
+    --border: #d6d0c4;
+    --success: #2a7a4b;
+    --card: #fffdf8;
+  }
+
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: var(--paper);
+    color: var(--ink);
+    font-family: 'DM Sans', sans-serif;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 24px 16px;
+  }
+
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background:
+      radial-gradient(ellipse 60% 40% at 10% 20%, rgba(200,67,43,0.06) 0%, transparent 60%),
+      radial-gradient(ellipse 50% 50% at 90% 80%, rgba(43,108,184,0.06) 0%, transparent 60%);
+    pointer-events: none;
+  }
+
+  .container {
+    width: 100%;
+    max-width: 680px;
+    position: relative;
+  }
+
+  .site-header {
+    text-align: center;
+    margin-bottom: 32px;
+  }
+  .site-label {
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-bottom: 8px;
+  }
+  .site-title {
+    font-family: 'DM Serif Display', serif;
+    font-size: clamp(32px, 6vw, 52px);
+    line-height: 1.1;
+    color: var(--ink);
+  }
+  .site-title em {
+    font-style: italic;
+    color: var(--accent);
+  }
+
+  .card {
+    background: var(--card);
+    border: 1.5px solid var(--border);
+    border-radius: 4px;
+    padding: 40px;
+    box-shadow: 4px 6px 0 0 var(--border);
+    position: relative;
+    overflow: hidden;
+  }
+  .card::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 3px;
+    background: linear-gradient(90deg, var(--accent), var(--accent2));
+  }
+
+  /* NAME INPUT */
+  .name-section {
+    margin-bottom: 28px;
+  }
+  .name-label {
+    display: block;
+    font-size: 12px;
+    font-weight: 600;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-bottom: 8px;
+  }
+  .name-input {
+    width: 100%;
+    padding: 12px 16px;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 16px;
+    border: 1.5px solid var(--border);
+    border-radius: 3px;
+    background: var(--paper);
+    color: var(--ink);
+    outline: none;
+    transition: border-color 0.15s;
+  }
+  .name-input:focus {
+    border-color: var(--accent2);
+    box-shadow: 0 0 0 3px rgba(43,108,184,0.1);
+  }
+  .name-input::placeholder { color: var(--muted); }
+  .name-error {
+    font-size: 12px;
+    color: var(--accent);
+    margin-top: 6px;
+    display: none;
+  }
+  .name-error.show { display: block; }
+
+  .progress-wrap {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 28px;
+  }
+  .progress-bar-bg {
+    flex: 1;
+    height: 4px;
+    background: var(--border);
+    border-radius: 2px;
+    overflow: hidden;
+  }
+  .progress-bar-fill {
+    height: 100%;
+    background: linear-gradient(90deg, var(--accent), var(--accent2));
+    border-radius: 2px;
+    transition: width 0.4s ease;
+  }
+  .progress-label {
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--muted);
+    white-space: nowrap;
+    min-width: 48px;
+    text-align: right;
+  }
+
+  .question-meta {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 20px;
+  }
+  .question-type-badge {
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--accent2);
+    background: rgba(43,108,184,0.08);
+    border: 1px solid rgba(43,108,184,0.2);
+    border-radius: 2px;
+    padding: 3px 8px;
+  }
+  .cefr-badge {
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--muted);
+    border: 1px solid var(--border);
+    border-radius: 2px;
+    padding: 3px 8px;
+  }
+
+  .question-text {
+    font-family: 'DM Serif Display', serif;
+    font-size: clamp(18px, 3vw, 24px);
+    line-height: 1.45;
+    margin-bottom: 28px;
+    color: var(--ink);
+  }
+
+  .options {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+    margin-bottom: 28px;
+  }
+
+  .option-btn {
+    background: none;
+    border: 1.5px solid var(--border);
+    border-radius: 3px;
+    padding: 14px 16px;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 15px;
+    font-weight: 400;
+    color: var(--ink);
+    cursor: pointer;
+    text-align: left;
+    transition: all 0.15s ease;
+    position: relative;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .option-btn:hover:not(:disabled) {
+    border-color: var(--accent2);
+    background: rgba(43,108,184,0.04);
+    transform: translateY(-1px);
+    box-shadow: 2px 3px 0 var(--border);
+  }
+  .option-letter {
+    font-size: 11px;
+    font-weight: 700;
+    color: var(--muted);
+    background: var(--paper);
+    border: 1px solid var(--border);
+    border-radius: 2px;
+    width: 22px;
+    height: 22px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    transition: all 0.15s;
+  }
+  .option-btn.selected { border-color: var(--accent2); background: rgba(43,108,184,0.06); }
+  .option-btn.selected .option-letter { background: var(--accent2); border-color: var(--accent2); color: white; }
+  .option-btn.correct { border-color: var(--success); background: rgba(42,122,75,0.07); }
+  .option-btn.correct .option-letter { background: var(--success); border-color: var(--success); color: white; }
+  .option-btn.wrong { border-color: var(--accent); background: rgba(200,67,43,0.06); opacity: 0.7; }
+  .option-btn:disabled { cursor: default; transform: none; }
+
+  .feedback-box {
+    border-radius: 3px;
+    padding: 12px 16px;
+    font-size: 13.5px;
+    margin-bottom: 20px;
+    display: none;
+    border-left: 3px solid;
+  }
+  .feedback-box.correct { border-color: var(--success); background: rgba(42,122,75,0.07); color: var(--success); display: block; }
+  .feedback-box.wrong { border-color: var(--accent); background: rgba(200,67,43,0.06); color: var(--accent); display: block; }
+
+  .nav-row { display: flex; justify-content: flex-end; }
+  .btn-next {
+    background: var(--ink);
+    color: white;
+    border: none;
+    border-radius: 3px;
+    padding: 12px 28px;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 14px;
+    font-weight: 600;
+    letter-spacing: 0.04em;
+    cursor: pointer;
+    transition: all 0.15s;
+    display: none;
+  }
+  .btn-next:hover { background: var(--accent); transform: translateY(-1px); }
+  .btn-next.show { display: block; }
+
+  .screen { display: none; }
+  .screen.active { display: block; }
+
+  .start-screen { text-align: center; }
+  .start-desc {
+    color: var(--muted);
+    font-size: 15px;
+    line-height: 1.7;
+    margin-bottom: 20px;
+  }
+  .level-tags {
+    display: flex;
+    justify-content: center;
+    gap: 6px;
+    flex-wrap: wrap;
+    margin-bottom: 28px;
+  }
+  .level-tag {
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.1em;
+    padding: 4px 10px;
+    border-radius: 2px;
+    border: 1px solid var(--border);
+    color: var(--muted);
+  }
+  .btn-start {
+    background: var(--accent);
+    color: white;
+    border: none;
+    border-radius: 3px;
+    padding: 15px 48px;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 16px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+    letter-spacing: 0.03em;
+  }
+  .btn-start:hover { background: #a8341f; transform: translateY(-2px); box-shadow: 0 4px 12px rgba(200,67,43,0.3); }
+  .quiz-info {
+    display: flex;
+    justify-content: center;
+    gap: 24px;
+    margin-bottom: 24px;
+  }
+  .quiz-info-item { text-align: center; }
+  .quiz-info-num { font-family: 'DM Serif Display', serif; font-size: 28px; color: var(--accent); }
+  .quiz-info-label { font-size: 11px; color: var(--muted); letter-spacing: 0.1em; text-transform: uppercase; }
+
+  .result-header { text-align: center; margin-bottom: 32px; }
+  .result-score-ring {
+    width: 120px;
+    height: 120px;
+    border-radius: 50%;
+    border: 4px solid var(--border);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto 20px;
+    position: relative;
+    background: var(--card);
+  }
+  .result-score-ring::before {
+    content: '';
+    position: absolute;
+    inset: -4px;
+    border-radius: 50%;
+    background: conic-gradient(var(--accent) var(--pct), transparent 0);
+    z-index: -1;
+    transition: all 1s ease;
+  }
+  .result-score-num { font-family: 'DM Serif Display', serif; font-size: 36px; color: var(--ink); line-height: 1; }
+  .result-score-den { font-size: 12px; color: var(--muted); }
+  .result-cefr { font-family: 'DM Serif Display', serif; font-size: 42px; color: var(--accent); margin-bottom: 4px; }
+  .result-level-name { font-size: 16px; color: var(--muted); margin-bottom: 6px; }
+  .result-name-display { font-size: 14px; color: var(--ink); font-weight: 600; margin-bottom: 20px; }
+  .result-desc {
+    font-size: 14.5px;
+    line-height: 1.7;
+    color: var(--ink);
+    text-align: left;
+    background: rgba(200,67,43,0.04);
+    border: 1px solid var(--border);
+    border-radius: 3px;
+    padding: 16px 20px;
+    margin-bottom: 28px;
+  }
+  .result-breakdown { margin-bottom: 28px; }
+  .result-breakdown h3 { font-size: 12px; font-weight: 600; letter-spacing: 0.15em; text-transform: uppercase; color: var(--muted); margin-bottom: 12px; }
+  .breakdown-item { display: flex; align-items: center; gap: 10px; margin-bottom: 8px; font-size: 13.5px; }
+  .breakdown-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+  .dot-correct { background: var(--success); }
+  .dot-wrong { background: var(--accent); }
+
+  /* Save status */
+  .save-status {
+    font-size: 12px;
+    color: var(--muted);
+    text-align: center;
+    margin-bottom: 16px;
+    min-height: 18px;
+  }
+  .save-status.saving { color: var(--accent2); }
+  .save-status.saved { color: var(--success); }
+  .save-status.error { color: var(--accent); }
+
+  .btn-retry {
+    width: 100%;
+    background: var(--ink);
+    color: white;
+    border: none;
+    border-radius: 3px;
+    padding: 14px;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 15px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+  .btn-retry:hover { background: var(--accent); }
+
+  @media (max-width: 480px) {
+    .card { padding: 24px 20px; }
+    .options { grid-template-columns: 1fr; }
+  }
+</style>
+</head>
+<body>
+<div class="container">
+  <header class="site-header">
+    <p class="site-label">無料 英語レベルチェック</p>
+    <h1 class="site-title">English <em>Level</em> Quiz</h1>
+  </header>
+
+  <!-- START -->
+  <div class="card screen active" id="startScreen">
+    <div class="start-screen">
+      <p class="start-desc">10問の問題であなたの英語レベルを診断します。<br>語彙・文法・読解の3カテゴリから出題されます。</p>
+      <div class="quiz-info">
+        <div class="quiz-info-item">
+          <div class="quiz-info-num">10</div>
+          <div class="quiz-info-label">問題数</div>
+        </div>
+        <div class="quiz-info-item">
+          <div class="quiz-info-num">3</div>
+          <div class="quiz-info-label">カテゴリ</div>
+        </div>
+        <div class="quiz-info-item">
+          <div class="quiz-info-num">5<span style="font-size:18px">分</span></div>
+          <div class="quiz-info-label">目安時間</div>
+        </div>
+      </div>
+
+      <!-- Name Input -->
+      <div class="name-section" style="text-align:left;">
+        <label class="name-label" for="nameInput">お名前</label>
+        <input
+          type="text"
+          id="nameInput"
+          class="name-input"
+          placeholder="例：山田 太郎"
+          maxlength="50"
+          autocomplete="name"
+        >
+        <div class="name-error" id="nameError">お名前を入力してください</div>
+      </div>
+
+      <div class="level-tags">
+        <span class="level-tag">A1 Beginner</span>
+        <span class="level-tag">A2 Elementary</span>
+        <span class="level-tag">B1 Intermediate</span>
+        <span class="level-tag">B2 Upper-Intermediate</span>
+        <span class="level-tag">C1 Advanced</span>
+      </div>
+      <button class="btn-start" onclick="startQuiz()">テストを始める →</button>
+    </div>
+  </div>
+
+  <!-- QUIZ -->
+  <div class="card screen" id="quizScreen">
+    <div class="progress-wrap">
+      <div class="progress-bar-bg">
+        <div class="progress-bar-fill" id="progressFill" style="width:0%"></div>
+      </div>
+      <span class="progress-label" id="progressLabel">1 / 10</span>
+    </div>
+    <div class="question-meta">
+      <span class="question-type-badge" id="qTypeBadge">Grammar</span>
+      <span class="cefr-badge" id="qCefrBadge">A1</span>
+    </div>
+    <p class="question-text" id="questionText"></p>
+    <div class="options" id="optionsGrid"></div>
+    <div class="feedback-box" id="feedbackBox"></div>
+    <div class="nav-row">
+      <button class="btn-next" id="btnNext" onclick="nextQuestion()">次の問題 →</button>
+    </div>
+  </div>
+
+  <!-- RESULT -->
+  <div class="card screen" id="resultScreen">
+    <div class="result-header">
+      <div class="result-score-ring" id="scoreRing">
+        <div class="result-score-num" id="scoreNum">0</div>
+        <div class="result-score-den">/ 10</div>
+      </div>
+      <div class="result-cefr" id="resultCefr">B1</div>
+      <div class="result-level-name" id="resultLevelName">Intermediate</div>
+      <div class="result-name-display" id="resultNameDisplay"></div>
+    </div>
+    <div class="result-desc" id="resultDesc"></div>
+    <div class="result-breakdown">
+      <h3>問題の結果</h3>
+      <div id="breakdownList"></div>
+    </div>
+    <div class="save-status" id="saveStatus"></div>
+    <button class="btn-retry" onclick="retryQuiz()">もう一度挑戦する</button>
+  </div>
+</div>
+
+<script>
+// ===== Google Apps Script URL =====
+// Google Apps Scriptをデプロイしたら、下記のURLを置き換えてください
+const SCRIPT_URL = 'YOUR_GOOGLE_APPS_SCRIPT_URL';
+// ==================================
+
+const questions = [
+  {
+    id: 1, type: "Vocabulary", cefr: "A1",
+    text: "Choose the correct word to complete the sentence:\n\n「She drinks _____ every morning.」",
+    options: ["coffee", "read", "happy", "quickly"],
+    answer: 0,
+    explanation: "「coffee（コーヒー）」が正解です。drink（飲む）の目的語には飲み物が入ります。"
+  },
+  {
+    id: 2, type: "Grammar", cefr: "A1",
+    text: "Choose the correct form:\n\n「There _____ three cats in the garden.」",
+    options: ["is", "are", "am", "be"],
+    answer: 1,
+    explanation: "「are」が正解。Three cats（複数）に合わせて be動詞は are を使います。"
+  },
+  {
+    id: 3, type: "Grammar", cefr: "A2",
+    text: "Fill in the blank:\n\n「I _____ to London twice before this trip.」",
+    options: ["went", "have been", "go", "was going"],
+    answer: 1,
+    explanation: "「have been」が正解。「～に行ったことがある」は現在完了形（have + 過去分詞）で表します。"
+  },
+  {
+    id: 4, type: "Vocabulary", cefr: "A2",
+    text: "Which word means the opposite of \"ancient\"?",
+    options: ["old", "modern", "large", "famous"],
+    answer: 1,
+    explanation: "「modern（現代の）」が正解。ancient（古代の・古い）の反対は modern です。"
+  },
+  {
+    id: 5, type: "Grammar", cefr: "B1",
+    text: "Choose the correct sentence:\n\n「By the time she arrived, the meeting _____.」",
+    options: ["already finishes", "has already finished", "had already finished", "would already finish"],
+    answer: 2,
+    explanation: "「had already finished」が正解。過去の基準点（she arrived）より前に完了した出来事には過去完了（had + 過去分詞）を使います。"
+  },
+  {
+    id: 6, type: "Vocabulary", cefr: "B1",
+    text: "Choose the best word for the blank:\n\n「The new policy will _____ employees to work from home.」",
+    options: ["forbid", "permit", "demand", "ignore"],
+    answer: 1,
+    explanation: "「permit（許可する）」が正解。文脈から「在宅勤務を許可する」という意味が自然です。"
+  },
+  {
+    id: 7, type: "Reading", cefr: "B2",
+    text: "Read the sentence and choose the closest meaning:\n\n「The proposal was met with a lukewarm response from the board.」",
+    options: [
+      "The board strongly opposed the proposal.",
+      "The board was enthusiastic about the proposal.",
+      "The board showed little enthusiasm for the proposal.",
+      "The board did not receive the proposal."
+    ],
+    answer: 2,
+    explanation: "「lukewarm（ぬるい→熱意のない）」は比喩的に「乗り気でない・消極的」を意味します。"
+  },
+  {
+    id: 8, type: "Grammar", cefr: "B2",
+    text: "Choose the correct option:\n\n「If I _____ the lottery, I would travel the world.」",
+    options: ["win", "won", "had won", "would win"],
+    answer: 1,
+    explanation: "「won」が正解。現実ではない仮定（仮定法過去）では if節に過去形を使います。"
+  },
+  {
+    id: 9, type: "Vocabulary", cefr: "C1",
+    text: "Which word is closest in meaning to \"exacerbate\"?",
+    options: ["alleviate", "worsen", "examine", "eliminate"],
+    answer: 1,
+    explanation: "「worsen（悪化させる）」が正解。exacerbate は「（問題・状況を）さらに悪化させる」という意味です。"
+  },
+  {
+    id: 10, type: "Reading", cefr: "C1",
+    text: "What does the author imply in this sentence?\n\n「While the initiative was lauded by critics, its grassroots impact remained conspicuously absent.」",
+    options: [
+      "Critics and the public equally praised the initiative.",
+      "The initiative succeeded both publicly and critically.",
+      "Critics praised it, but ordinary people did not feel its effects.",
+      "The initiative was criticised for lacking popular support."
+    ],
+    answer: 2,
+    explanation: "lauded（賞賛された）＋ grassroots impact remained absent（一般市民への影響はなかった）から、批評家には評価されたが現場レベルでの効果は見られなかったことが読み取れます。"
+  }
+];
+
+const cefrLevels = {
+  0:  { cefr: "Pre-A1", name: "Starter",           desc: "英語学習を始めたばかりの段階です。まず基本的な単語や挨拶から始めましょう。毎日少しずつ学習を積み重ねることが大切です。" },
+  1:  { cefr: "A1",     name: "Beginner",           desc: "基本的な単語や簡単なフレーズを理解できるレベルです。日常会話の入門段階にいます。引き続き語彙を増やしていきましょう。" },
+  2:  { cefr: "A1",     name: "Beginner",           desc: "基本的な単語や簡単なフレーズを理解できるレベルです。日常会話の入門段階にいます。引き続き語彙を増やしていきましょう。" },
+  3:  { cefr: "A2",     name: "Elementary",         desc: "日常的なトピックについて簡単な文章を読み書きできる段階です。基本的な文法ルールを身に付けてきています。" },
+  4:  { cefr: "A2",     name: "Elementary",         desc: "日常的なトピックについて簡単な文章を読み書きできる段階です。基本的な文法ルールを身に付けてきています。" },
+  5:  { cefr: "B1",     name: "Intermediate",       desc: "身近なテーマについて理解し、意見を述べることができるレベルです。仕事や旅行など実用的な英語使用に近づいています。" },
+  6:  { cefr: "B1",     name: "Intermediate",       desc: "身近なテーマについて理解し、意見を述べることができるレベルです。仕事や旅行など実用的な英語使用に近づいています。" },
+  7:  { cefr: "B2",     name: "Upper-Intermediate", desc: "複雑なテキストを理解し、母語話者と自然に会話できるレベルです。ビジネス英語や学術英語でも対応できる力を持ちつつあります。" },
+  8:  { cefr: "B2",     name: "Upper-Intermediate", desc: "複雑なテキストを理解し、母語話者と自然に会話できるレベルです。ビジネス英語や学術英語でも対応できる力を持ちつつあります。" },
+  9:  { cefr: "C1",     name: "Advanced",           desc: "幅広いトピックを深く理解し、流暢かつ自発的に表現できるレベルです。ネイティブスピーカーとほぼ対等なコミュニケーションが可能です。" },
+  10: { cefr: "C1+",    name: "Proficient",         desc: "非常に高度な英語運用能力を持っています。専門的・学術的な内容も難なく理解・表現でき、英語をほぼネイティブレベルで使いこなしています。" }
+};
+
+let current = 0;
+let score = 0;
+let answered = false;
+let userAnswers = [];
+let userName = '';
+
+function startQuiz() {
+  const nameInput = document.getElementById('nameInput');
+  const nameError = document.getElementById('nameError');
+  userName = nameInput.value.trim();
+
+  if (!userName) {
+    nameError.classList.add('show');
+    nameInput.focus();
+    return;
+  }
+  nameError.classList.remove('show');
+
+  current = 0; score = 0; answered = false; userAnswers = [];
+  show('quizScreen');
+  renderQuestion();
+}
+
+function show(id) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+}
+
+function renderQuestion() {
+  const q = questions[current];
+  answered = false;
+  document.getElementById('btnNext').classList.remove('show');
+  document.getElementById('feedbackBox').className = 'feedback-box';
+  document.getElementById('feedbackBox').textContent = '';
+
+  const pct = (current / questions.length) * 100;
+  document.getElementById('progressFill').style.width = pct + '%';
+  document.getElementById('progressLabel').textContent = `${current + 1} / ${questions.length}`;
+  document.getElementById('qTypeBadge').textContent = q.type;
+  document.getElementById('qCefrBadge').textContent = q.cefr;
+
+  const qEl = document.getElementById('questionText');
+  qEl.innerHTML = q.text.replace(/\n/g, '<br>');
+
+  const grid = document.getElementById('optionsGrid');
+  grid.innerHTML = '';
+  const letters = ['A', 'B', 'C', 'D'];
+  q.options.forEach((opt, i) => {
+    const btn = document.createElement('button');
+    btn.className = 'option-btn';
+    btn.innerHTML = `<span class="option-letter">${letters[i]}</span>${opt}`;
+    btn.onclick = () => selectAnswer(i);
+    grid.appendChild(btn);
+  });
+}
+
+function selectAnswer(idx) {
+  if (answered) return;
+  answered = true;
+
+  const q = questions[current];
+  const btns = document.querySelectorAll('.option-btn');
+  const feedback = document.getElementById('feedbackBox');
+
+  btns.forEach((btn, i) => {
+    btn.disabled = true;
+    if (i === q.answer) btn.classList.add('correct');
+    if (i === idx && idx !== q.answer) btn.classList.add('wrong');
+    if (i === idx) btn.classList.add('selected');
+  });
+
+  const isCorrect = idx === q.answer;
+  if (isCorrect) score++;
+  userAnswers.push({ q, chosen: idx, correct: isCorrect });
+
+  feedback.className = 'feedback-box ' + (isCorrect ? 'correct' : 'wrong');
+  feedback.innerHTML = (isCorrect ? '✓ 正解！ — ' : '✗ 不正解 — ') + q.explanation;
+
+  document.getElementById('btnNext').classList.add('show');
+  document.getElementById('btnNext').textContent =
+    current < questions.length - 1 ? '次の問題 →' : '結果を見る →';
+}
+
+function nextQuestion() {
+  current++;
+  if (current >= questions.length) {
+    showResult();
+  } else {
+    renderQuestion();
+  }
+}
+
+function showResult() {
+  show('resultScreen');
+
+  const level = cefrLevels[score];
+  document.getElementById('scoreNum').textContent = score;
+  document.getElementById('resultCefr').textContent = level.cefr;
+  document.getElementById('resultLevelName').textContent = level.name;
+  document.getElementById('resultNameDisplay').textContent = userName + ' さんの結果';
+  document.getElementById('resultDesc').textContent = level.desc;
+
+  const pct = Math.round((score / 10) * 360);
+  document.getElementById('scoreRing').style.setProperty('--pct', pct + 'deg');
+
+  const list = document.getElementById('breakdownList');
+  list.innerHTML = '';
+  userAnswers.forEach((ua, i) => {
+    const el = document.createElement('div');
+    el.className = 'breakdown-item';
+    el.innerHTML = `
+      <span class="breakdown-dot ${ua.correct ? 'dot-correct' : 'dot-wrong'}"></span>
+      <span>Q${i+1}. <strong>${ua.q.type}</strong> [${ua.q.cefr}] — ${ua.correct ? '正解' : '不正解（正解: ' + ua.q.options[ua.q.answer] + '）'}</span>
+    `;
+    list.appendChild(el);
+  });
+
+  saveToSheet(level);
+}
+
+function saveToSheet(level) {
+  if (SCRIPT_URL === 'YOUR_GOOGLE_APPS_SCRIPT_URL') return;
+
+  const statusEl = document.getElementById('saveStatus');
+  statusEl.className = 'save-status saving';
+  statusEl.textContent = '結果を保存中...';
+
+  const now = new Date();
+  const dateStr = now.getFullYear() + '/' +
+    String(now.getMonth() + 1).padStart(2, '0') + '/' +
+    String(now.getDate()).padStart(2, '0') + ' ' +
+    String(now.getHours()).padStart(2, '0') + ':' +
+    String(now.getMinutes()).padStart(2, '0');
+
+  const payload = {
+    datetime: dateStr,
+    name: userName,
+    score: score,
+    cefr: level.cefr,
+    levelName: level.name
+  };
+
+  fetch(SCRIPT_URL, {
+    method: 'POST',
+    mode: 'no-cors',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(payload)
+  })
+  .then(() => {
+    statusEl.className = 'save-status saved';
+    statusEl.textContent = '✓ 結果をスプレッドシートに保存しました';
+  })
+  .catch(() => {
+    statusEl.className = 'save-status error';
+    statusEl.textContent = '保存に失敗しました。管理者にお知らせください。';
+  });
+}
+
+function retryQuiz() {
+  document.getElementById('nameInput').value = '';
+  userName = '';
+  show('startScreen');
+}
+</script>
+</body>
+</html>
