@@ -599,6 +599,7 @@ let score = 0;
 let answered = false;
 let userAnswers = [];
 let userName = '';
+let startTime = null;
 
 function startQuiz() {
   const nameInput = document.getElementById('nameInput');
@@ -613,6 +614,7 @@ function startQuiz() {
   nameError.classList.remove('show');
 
   current = 0; score = 0; answered = false; userAnswers = [];
+  startTime = Date.now();
   show('quizScreen');
   renderQuestion();
 }
@@ -728,12 +730,27 @@ function saveToSheet(level) {
     String(now.getHours()).padStart(2, '0') + ':' +
     String(now.getMinutes()).padStart(2, '0');
 
+  const elapsedSec = Math.round((Date.now() - startTime) / 1000);
+  const elapsed = Math.floor(elapsedSec / 60) + '分' + (elapsedSec % 60) + '秒';
+
+  const answers = userAnswers.map((ua, i) => ({
+    no: i + 1,
+    type: ua.q.type,
+    cefr: ua.q.cefr,
+    question: ua.q.text.replace(/\n/g, ' '),
+    chosen: ua.q.options[ua.chosen],
+    correct: ua.q.options[ua.q.answer],
+    result: ua.correct ? '正解' : '不正解'
+  }));
+
   const payload = {
     datetime: dateStr,
     name: userName,
     score: score,
     cefr: level.cefr,
-    levelName: level.name
+    levelName: level.name,
+    elapsed: elapsed,
+    answers: answers
   };
 
   fetch(SCRIPT_URL, {
